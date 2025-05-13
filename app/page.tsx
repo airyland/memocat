@@ -108,7 +108,7 @@ export default function Home() {
         <div class="text-center w-[320px]">
           <div class="window-chrome pt-4 pb-6 px-6">
             <div class="window-dots">
-              <div class="window-dot window-dot-red"></div>
+              <div class="window-dot window-dot-red cursor-pointer" onclick="this.closest('dialog').close()"></div>
               <div class="window-dot window-dot-yellow"></div>
               <div class="window-dot window-dot-green"></div>
             </div>
@@ -116,9 +116,6 @@ export default function Home() {
             <p class="text-sm text-gray-600 mb-6">
               To sync notes with your disk, please use a desktop browser. Mobile browsers don't support the File System Access API.
             </p>
-            <button class="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors" onclick="this.closest('dialog').close()">
-              Got it
-            </button>
           </div>
         </div>
       `
@@ -135,7 +132,7 @@ export default function Home() {
     }
 
     try {
-      const choice = await new Promise<'new' | 'load'>((resolve) => {
+      const choice = await new Promise<'new' | 'load' | null>((resolve) => {
         const dialog = document.createElement('dialog')
         dialog.className = 'fixed inset-0 m-auto h-fit w-fit'
         
@@ -154,6 +151,12 @@ export default function Home() {
           dialog:focus {
             outline: none;
           }
+          .window-dot-red {
+            cursor: pointer;
+          }
+          .window-dot-red:hover {
+            opacity: 0.8;
+          }
         `
         document.head.appendChild(style)
         
@@ -161,7 +164,7 @@ export default function Home() {
           <div class="text-center w-[320px]">
             <div class="window-chrome pt-4 pb-6 px-6">
               <div class="window-dots">
-                <div class="window-dot window-dot-red"></div>
+                <div class="window-dot window-dot-red" onclick="this.closest('dialog').close()"></div>
                 <div class="window-dot window-dot-yellow"></div>
                 <div class="window-dot window-dot-green"></div>
               </div>
@@ -182,18 +185,22 @@ export default function Home() {
         
         const handleClick = (e: MouseEvent) => {
           const button = (e.target as HTMLElement).closest('button')
-          if (button) {
+          if (button?.dataset.choice) {
             const choice = button.dataset.choice as 'new' | 'load'
             dialog.remove()
             style.remove()
             resolve(choice)
           }
         }
-        
+
         dialog.addEventListener('click', handleClick)
         document.body.appendChild(dialog)
         dialog.showModal()
       })
+
+      if (!choice) {
+        return
+      }
 
       if (choice === 'new') {
         const handle = await window.showSaveFilePicker({
@@ -314,7 +321,7 @@ export default function Home() {
       <div className="max-w-5xl mx-auto">
         <div className="window-chrome pt-12 pb-6 px-6 mb-8">
           <div className="window-dots">
-            <div className="window-dot window-dot-red"></div>
+            <div className="window-dot window-dot-red cursor-pointer"></div>
             <div className="window-dot window-dot-yellow"></div>
             <div className="window-dot window-dot-green"></div>
           </div>
