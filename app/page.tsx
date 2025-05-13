@@ -13,6 +13,7 @@ export default function Home() {
   const [activeTag, setActiveTag] = useState("")
   const [hasFileHandle, setHasFileHandle] = useState(false)
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done'>('idle')
+  const [fileName, setFileName] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const extractTags = (text: string): string[] => {
@@ -41,6 +42,9 @@ export default function Home() {
 
   useEffect(() => {
     setHasFileHandle(fileSync.hasFileHandle())
+    if (fileSync.fileHandle) {
+      setFileName(fileSync.fileHandle.name)
+    }
   }, [])
 
   const loadNotes = async () => {
@@ -76,9 +80,155 @@ export default function Home() {
   const handleManualSave = () => syncToDisk()
 
   const handleImportFile = async () => {
+    // Check if running on mobile
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    if (isMobile) {
+      const dialog = document.createElement('dialog')
+      dialog.className = 'fixed inset-0 m-auto h-fit w-fit'
+      
+      const style = document.createElement('style')
+      style.textContent = `
+        dialog::backdrop {
+          background-color: rgba(0, 0, 0, 0.3);
+          backdrop-filter: blur(2px);
+        }
+        dialog {
+          padding: 0;
+          border: none;
+          border-radius: 8px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        dialog:focus {
+          outline: none;
+        }
+      `
+      document.head.appendChild(style)
+      
+      dialog.innerHTML = `
+        <div class="text-center w-[320px]">
+          <div class="window-chrome pt-4 pb-6 px-6">
+            <div class="window-dots">
+              <div class="window-dot window-dot-red"></div>
+              <div class="window-dot window-dot-yellow"></div>
+              <div class="window-dot window-dot-green"></div>
+            </div>
+            <h3 class="text-lg font-medium mt-6 mb-4">Desktop Required</h3>
+            <p class="text-sm text-gray-600 mb-6">
+              To sync notes with your disk, please use a desktop browser. Mobile browsers don't support the File System Access API.
+            </p>
+            <button class="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors" onclick="this.closest('dialog').close()">
+              Got it
+            </button>
+          </div>
+        </div>
+      `
+      
+      document.body.appendChild(dialog)
+      dialog.showModal()
+      
+      dialog.addEventListener('close', () => {
+        dialog.remove()
+        style.remove()
+      })
+      
+      return
+    }
+
     try {
-      await fileSync.loadFromFile()
-      setHasFileHandle(true)
+      const choice = await new Promise<'new' | 'load'>((resolve) => {
+        const dialog = document.createElement('dialog')
+        dialog.className = 'fixed inset-0 m-auto h-fit w-fit'
+        
+        const style = document.createElement('style')
+        style.textContent = `
+          dialog::backdrop {
+            background-color: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+          }
+          dialog {
+            padding: 0;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          }
+          dialog:focus {
+            outline: none;
+          }
+        `
+        document.head.appendChild(style)
+        
+        dialog.innerHTML = `
+          <div class="text-center w-[320px]">
+            <div class="window-chrome pt-4 pb-6 px-6">
+              <div class="window-dots">
+                <div class="window-dot window-dot-red"></div>
+                <div class="window-dot window-dot-yellow"></div>
+                <div class="window-dot window-dot-green"></div>
+              </div>
+              <h3 class="text-lg font-medium mt-6 mb-6">Choose Storage Option</h3>
+              <div class="space-y-3">
+                <button class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors" data-choice="new">
+                  <div class="font-medium">Create new notes file</div>
+                  <div class="text-xs text-gray-500 mt-1">Start with a fresh notes collection</div>
+                </button>
+                <button class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors" data-choice="load">
+                  <div class="font-medium">Load existing notes</div>
+                  <div class="text-xs text-gray-500 mt-1">Import notes from a saved file</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        `
+        
+        const handleClick = (e: MouseEvent) => {
+          const button = (e.target as HTMLElement).closest('button')
+          if (button) {
+            const choice = button.dataset.choice as 'new' | 'load'
+            dialog.remove()
+            style.remove()
+            resolve(choice)
+          }
+        }
+        
+        dialog.addEventListener('click', handleClick)
+        document.body.appendChild(dialog)
+        dialog.showModal()
+      })
+
+      if (choice === 'new') {
+        const handle = await window.showSaveFilePicker({
+          types: [{
+            description: 'JSON Files',
+            accept: {
+              'application/json': ['.json']
+            }
+          }],
+          suggestedName: 'memocat-notes.json'
+        })
+        
+        const writable = await handle.createWritable()
+        await writable.write(JSON.stringify({ notes: [] }, null, 2))
+        await writable.close()
+        
+        fileSync.fileHandle = handle
+        setHasFileHandle(true)
+        setFileName(handle.name)
+      } else {
+        const [handle] = await window.showOpenFilePicker({
+          types: [{
+            description: 'JSON Files',
+            accept: {
+              'application/json': ['.json']
+            }
+          }]
+        })
+        
+        fileSync.fileHandle = handle
+        setHasFileHandle(true)
+        setFileName(handle.name)
+      }
+      
+      await fileSync.loadContent()
       loadNotes()
     } catch (error) {
       console.error('Error importing file:', error)
@@ -179,44 +329,32 @@ export default function Home() {
                 <h1 className="text-2xl font-bold">Hello</h1>
                 <div className="text-sm text-gray-400">Hello there, welcome back to your notes.</div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center flex-shrink-0">
                 {!hasFileHandle ? (
                   <button
                     onClick={handleImportFile}
-                    className="px-3 py-1 text-xs text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                    className="whitespace-nowrap px-3 py-1 text-xs text-gray-600 hover:text-gray-900 flex items-center gap-1"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                     </svg>
-                    Load from disk
+                    <span className="whitespace-nowrap">Load from disk</span>
                   </button>
                 ) : (
-                  <>
-                    <div className="px-3 py-1 text-xs text-gray-600 flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                      Linked to disk
-                    </div>
-                    <button
-                      onClick={handleManualSave}
-                      disabled={syncStatus === 'syncing'}
-                      className="px-3 py-1 text-xs text-gray-600 hover:text-gray-900 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
-                    >
-                      {syncStatus === 'syncing' ? (
-                        <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                        </svg>
-                      )}
-                      {syncStatus === 'idle' && 'Sync to disk'}
-                      {syncStatus === 'syncing' && 'Syncing...'}
-                      {syncStatus === 'done' && 'Sync done'}
-                    </button>
-                  </>
+                  <button
+                    onClick={() => {
+                      fileSync.fileHandle = null
+                      setHasFileHandle(false)
+                      setFileName('')
+                    }}
+                    className="whitespace-nowrap px-3 py-1 text-xs text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                    title="Disconnect from file"
+                  >
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    <span className="whitespace-nowrap">Connected to {fileName}</span>
+                  </button>
                 )}
               </div>
             </div>

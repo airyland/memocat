@@ -3,20 +3,19 @@ import type { Note } from './types'
 
 export class FileSync {
   private timer: NodeJS.Timeout | null = null
-  private fileHandle: FileSystemFileHandle | null = null
+  public fileHandle: FileSystemFileHandle | null = null
 
-  async loadFromFile(): Promise<void> {
+  setFileHandle(handle: FileSystemFileHandle) {
+    this.fileHandle = handle
+  }
+
+  async loadContent(): Promise<void> {
+    if (!this.fileHandle) {
+      throw new Error('No file handle available')
+    }
+
     try {
-      const [fileHandle] = await window.showOpenFilePicker({
-        types: [{
-          description: 'JSON Files',
-          accept: {
-            'application/json': ['.json']
-          }
-        }]
-      })
-      
-      const file = await fileHandle.getFile()
+      const file = await this.fileHandle.getFile()
       const content = await file.text()
       const data = JSON.parse(content)
 
@@ -32,39 +31,28 @@ export class FileSync {
       } else if (Array.isArray(data.notes)) {
         notesToImport = data.notes
       } else {
-        throw new Error('Invalid data format: expected an array of notes or an object with notes array')
-      }
-
-      // Validate notes
-      if (!notesToImport.every(note => 
-        note && 
-        typeof note === 'object' && 
-        typeof note.content === 'string' && 
-        Array.isArray(note.tags) &&
-        (note.createdAt || note.created_at) &&
-        (note.updatedAt || note.updated_at)
-      )) {
-        throw new Error('Invalid note format in data')
+        notesToImport = []
       }
 
       // Clear existing data
       const dbInstance = await db.getDBInstance()
       await dbInstance.notes.clear()
       
-      // Import all data with date normalization
-      await dbInstance.notes.bulkAdd(notesToImport.map((note: any) => ({
-        ...note,
-        // Handle different date field names and ensure they are dates
-        createdAt: new Date(note.createdAt || note.created_at),
-        updatedAt: new Date(note.updatedAt || note.updated_at),
-        // Ensure tags is always an array
-        tags: Array.isArray(note.tags) ? note.tags : []
-      })))
+      // Import data if any
+      if (notesToImport.length > 0) {
+        await dbInstance.notes.bulkAdd(notesToImport.map((note: any) => ({
+          ...note,
+          // Handle different date field names and ensure they are dates
+          createdAt: new Date(note.createdAt || note.created_at),
+          updatedAt: new Date(note.updatedAt || note.updated_at),
+          // Ensure tags is always an array
+          tags: Array.isArray(note.tags) ? note.tags : []
+        })))
+      }
       
-      this.fileHandle = fileHandle
-      console.log('Data imported successfully')
+      console.log('File loaded successfully')
     } catch (error) {
-      console.error('Error importing file:', error)
+      console.error('Error loading file:', error)
       throw error
     }
   }
