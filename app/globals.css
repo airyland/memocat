@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  body {
+    @apply bg-gray-50;
+  }
+}
+
+@layer components {
+  .window-chrome {
+    @apply relative rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden;
+  }
+
+  .window-dots {
+    @apply absolute top-4 left-4 flex gap-1.5;
+  }
+
+  .window-dot {
+    @apply w-3 h-3 rounded-full;
+  }
+
+  .window-dot-red {
+    @apply bg-red-500;
+  }
+
+  .window-dot-yellow {
+    @apply bg-yellow-400;
+  }
+
+  .window-dot-green {
+    @apply bg-green-500;
+  }
+
+  .tab {
+    @apply px-3 py-1 text-sm rounded-full;
+  }
+
+  .tab-active {
+    @apply bg-gray-200;
+  }
+
+  .tab-inactive {
+    @apply text-gray-500 hover:bg-gray-100;
+  }
+
+  .note-card {
+    @apply border border-gray-200 rounded-lg p-5 bg-white;
+  }
+
+  .tag {
+    @apply inline-block cursor-pointer rounded-full px-2 py-0.5 text-sm;
+  }
+
+  .tag-active {
+    @apply bg-black text-white;
+  }
+
+  .tag-inactive {
+    @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  }
+}
