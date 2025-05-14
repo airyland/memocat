@@ -1,30 +1,69 @@
-# Memo cat design
+# Memocat
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+A modern, elegant note-taking application built with Next.js that focuses on simplicity and efficiency.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/airylands-projects-9b1b8a41/v0-memo-cat-design)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/HPQ7jGSzVDv)
+## Features
 
-## Overview
+- 📝 Clean and intuitive note-taking interface
+- 🏷️ Tag-based organization with #hashtags
+- 💾 Local file sync support
+- 🔄 Automatic saving and syncing
+- 🎨 Modern UI built with Radix UI components
+- 📱 Responsive design for all devices
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Technology Stack
 
-## Deployment
+- **Framework**: Next.js 15
+- **UI Components**: Radix UI
+- **Database**: Dexie.js (IndexedDB)
+- **Styling**: Tailwind CSS
 
-Your project is live at:
+## Development
 
-**[https://vercel.com/airylands-projects-9b1b8a41/v0-memo-cat-design](https://vercel.com/airylands-projects-9b1b8a41/v0-memo-cat-design)**
+```bash
+# Install dependencies
+pnpm install
 
-## Build your app
+# Run development server
+pnpm dev
 
-Continue building your app on:
+# Build for production
+pnpm build
 
-**[https://v0.dev/chat/projects/HPQ7jGSzVDv](https://v0.dev/chat/projects/HPQ7jGSzVDv)**
+# Start production server
+pnpm start
+```
 
-## How It Works
+## Other Products
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+Check out our other tools and services:
+
+- [Query.Domains](https://query.domains) - Domain name search and availability checker
+- [Favicon.im](https://favicon.im) - Website favicon generator and manager
+- [Done.is](https://done.is) - Task management and productivity tool
+- [Logo.surf](https://logo.surf) - Logo design and branding platform
+- [Qrcode.fun](https://qrcode.fun) - Creative QR code generator
+
+## License
+
+MIT License
+
+Copyright (c) 2024 datetime.app
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

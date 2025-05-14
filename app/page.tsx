@@ -434,7 +434,7 @@ export default function Home() {
           <p>MemoCat — Your elegant note-taking companion</p>
           <p className="mt-1">All notes are stored locally in your browser/disk</p>
           <div className="mt-3">
-            © {new Date().getFullYear()} <a href="https://x.com/we_webmaster" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">x.com/we_webmaster</a>
+            © {new Date().getFullYear()} <a href="https://x.com/we_webmaster" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">x.com/we_webmaster</a> · <a href="https://github.com/airyland/memocat" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">GitHub</a>
           </div>
           <div className="mt-1">Made with ❤️ and AI</div>
         </footer>
