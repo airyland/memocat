@@ -1,6 +1,10 @@
-# Memocat
+# MemoCat
 
 A modern, elegant note-taking application built with Next.js that focuses on simplicity and efficiency.
+
+## Preview
+
+[MemoCat.com](https://memocat.com)
 
 ## Features
 
@@ -48,7 +52,7 @@ Check out our other tools and services:
 
 MIT License
 
-Copyright (c) 2024 datetime.app
+Copyright (c) 2025 MemoCat.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
