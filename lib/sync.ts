@@ -34,20 +34,34 @@ export class FileSync {
         notesToImport = []
       }
 
-      // Clear existing data
       const dbInstance = await db.getDBInstance()
-      await dbInstance.notes.clear()
       
       // Import data if any
       if (notesToImport.length > 0) {
-        await dbInstance.notes.bulkAdd(notesToImport.map((note: any) => ({
-          ...note,
-          // Handle different date field names and ensure they are dates
-          createdAt: new Date(note.createdAt || note.created_at),
-          updatedAt: new Date(note.updatedAt || note.updated_at),
-          // Ensure tags is always an array
-          tags: Array.isArray(note.tags) ? note.tags : []
-        })))
+        const existingNotes = await dbInstance.notes.toArray()
+        const existingIds = new Set(existingNotes.map(note => note.id))
+        
+        // Merge notes - keep browser-side for same IDs, import new ones
+        const notesToAdd = notesToImport
+          .filter(note => !existingIds.has(note.id))
+          .map((note: any) => ({
+            ...note,
+            createdAt: new Date(note.createdAt || note.created_at),
+            updatedAt: new Date(note.updatedAt || note.updated_at),
+            tags: Array.isArray(note.tags) ? note.tags : []
+          }))
+        
+        if (notesToAdd.length > 0) {
+          await dbInstance.notes.bulkAdd(notesToAdd)
+          
+          // Update file with merged data
+          if (this.fileHandle) {
+            const allNotes = await dbInstance.notes.toArray()
+            const writable = await this.fileHandle.createWritable()
+            await writable.write(JSON.stringify({ notes: allNotes }, null, 2))
+            await writable.close()
+          }
+        }
       }
       
       console.log('File loaded successfully')
