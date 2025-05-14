@@ -7,7 +7,15 @@ import type { Note } from "@/lib/types"
 import NoteItem from "@/components/note-item"
 
 export default function Home() {
-  const [content, setContent] = useState(() => localStorage.getItem('memocat_draft') || "")
+  const [content, setContent] = useState("")
+
+  // Initialize content from localStorage on client side
+  useEffect(() => {
+    const savedContent = typeof window !== 'undefined' ? localStorage.getItem('memocat_draft') : null
+    if (savedContent) {
+      setContent(savedContent)
+    }
+  }, [])
   const [notes, setNotes] = useState<Note[]>([])
   const [isDbInitialized, setIsDbInitialized] = useState(false)
   const [activeTag, setActiveTag] = useState("")
@@ -248,10 +256,12 @@ export default function Home() {
     const newContent = e.target.value
     setContent(newContent)
     // Save to localStorage when content changes
-    if (newContent) {
-      localStorage.setItem('memocat_draft', newContent)
-    } else {
-      localStorage.removeItem('memocat_draft')
+    if (typeof window !== 'undefined') {
+      if (newContent) {
+        localStorage.setItem('memocat_draft', newContent)
+      } else {
+        localStorage.removeItem('memocat_draft')
+      }
     }
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
@@ -277,7 +287,9 @@ export default function Home() {
         await db.notes.add(note)
         setContent("")
         // Clear localStorage after publishing
-        localStorage.removeItem('memocat_draft')
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('memocat_draft')
+        }
         if (textareaRef.current) {
           textareaRef.current.style.height = "auto"
         }
