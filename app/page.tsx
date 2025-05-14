@@ -253,7 +253,7 @@ export default function Home() {
   }
 
   const handleKeyDown = async (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault()
       if (!content.trim()) return
 
