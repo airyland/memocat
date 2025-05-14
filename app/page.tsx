@@ -379,7 +379,7 @@ export default function Home() {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold">Hello</h1>
-                <div className="text-sm text-gray-400">Hello there, welcome back to your notes.</div>
+                <div className="text-sm text-gray-400">Welcome back to your notes.</div>
               </div>
               <div className="flex gap-2 items-center flex-shrink-0">
                 {!hasFileHandle ? (
@@ -504,9 +504,9 @@ export default function Home() {
           <p>MemoCat — Your elegant note-taking companion</p>
           <p className="mt-1">All notes are stored locally in your browser/disk</p>
           <div className="mt-3">
-            {new Date().getFullYear()} <a href="https://x.com/we_webmaster" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">x.com/we_webmaster</a> · <a href="https://github.com/airyland/memocat" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">GitHub</a>
+            © {new Date().getFullYear()} <a href="https://x.com/we_webmaster" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">x.com/we_webmaster</a> · <a href="https://github.com/airyland/memocat" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">GitHub</a>
           </div>
-          <div className="mt-1">Made with and AI</div>
+          <div className="mt-1">Made with ❤️ and AI</div>
         </footer>
       </div>
     </main>
