@@ -322,15 +322,16 @@ export default function Home() {
   return (
     <main className="min-h-screen py-12 px-4 md:px-8">
       <div className="max-w-5xl mx-auto">
-        <div className="window-chrome pt-12 pb-6 px-6 mb-4">
-          <div className="window-dots">
-            <div className="window-dot window-dot-red cursor-pointer"></div>
-            <div className="window-dot window-dot-yellow"></div>
-            <div className="window-dot window-dot-green"></div>
-          </div>
-
-          <div className="text-center mb-2 mt-2">
-            <div className="text-gray-500 text-sm">memocat.local</div>
+        <div className="window-chrome pb-6 px-6 mb-4">
+          <div className="h-9 relative -mx-6 px-6">
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 window-dots flex gap-1.5">
+              <div className="window-dot window-dot-red cursor-pointer"></div>
+              <div className="window-dot window-dot-yellow"></div>
+              <div className="window-dot window-dot-green"></div>
+            </div>
+            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 text-center">
+              <div className="text-gray-500 text-sm">memocat.local</div>
+            </div>
           </div>
 
           <div className="mt-8 mb-4">
