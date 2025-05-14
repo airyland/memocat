@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, type KeyboardEvent } from "react"
+import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react"
 import { initializeDB, db } from "@/lib/db"
 import { fileSync } from "@/lib/sync"
 import type { Note } from "@/lib/types"
@@ -8,6 +8,8 @@ import NoteItem from "@/components/note-item"
 
 export default function Home() {
   const [content, setContent] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([])
 
   // Initialize content from localStorage on client side
   useEffect(() => {
@@ -55,20 +57,39 @@ export default function Home() {
     }
   }, [])
 
+  const filterNotes = useCallback((notesToFilter: Note[], query: string) => {
+    let filtered = notesToFilter
+    
+    if (activeTag) {
+      filtered = filtered.filter(note => note.tags.includes(activeTag))
+    }
+    
+    if (query) {
+      filtered = filtered.filter(note =>
+        note.content.toLowerCase().includes(query.toLowerCase()) ||
+        note.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+      )
+    }
+    
+    setFilteredNotes([...filtered]);
+  }, [activeTag, searchQuery]);
+
+  useEffect(() => {
+    if (isDbInitialized) {
+      filterNotes(notes, searchQuery);
+    }
+  }, [activeTag, searchQuery, isDbInitialized, notes]);
+
   const loadNotes = async () => {
     try {
-      let fetchedNotes: Note[] = []
-      if (activeTag) {
-        fetchedNotes = await db.notes.filter((note) => note.tags.includes(activeTag))
-      } else {
-        fetchedNotes = await db.notes.toArray()
-      }
-      setNotes(fetchedNotes)
-      syncToDisk()
+      const fetchedNotes = await db.notes.toArray();
+      setNotes(fetchedNotes);
+      filterNotes(fetchedNotes, searchQuery);
+      syncToDisk();
     } catch (error) {
-      console.error("Error loading notes:", error)
+      console.error("Error loading notes:", error);
     }
-  }
+  };
 
   const syncToDisk = async () => {
     if (!hasFileHandle) return
@@ -237,8 +258,6 @@ export default function Home() {
             }
           }]
         })
-
-        console.log('got handle', handle)
         
         fileSync.fileHandle = handle
         setHasFileHandle(true)
@@ -301,8 +320,9 @@ export default function Home() {
   }
 
   const handleTagClick = (tag: string) => {
-    setActiveTag(tag === activeTag ? "" : tag)
-  }
+    const newActiveTag = tag === activeTag ? "" : tag;
+    setActiveTag(newActiveTag);
+  };
 
   const handleDeleteNote = async (id: number) => {
     await db.notes.delete(id)
@@ -406,58 +426,87 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-8">
-            {activeTag && (
-              <div className="mb-4">
-                <button
-                  onClick={() => setActiveTag(null)}
-                  className="text-xs border border-gray-300 px-3 py-1 rounded-full"
-                >
-                  Clear filter: #{activeTag}
-                </button>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              {notes.map((note) => (
-                <NoteItem
-                  key={note.id}
-                  note={note}
-                  onTagClick={handleTagClick}
-                  activeTag={activeTag}
-                  onNoteUpdated={loadNotes}
+          {notes.length > 5 && (
+            <div className="mt-6 mb-4 flex items-center gap-2">
+              <div className="relative flex-1 max-w-[400px]">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    filterNotes(notes, e.target.value)
+                  }}
+                  placeholder="Search notes..."
+                  className="w-full px-3 py-2 pr-8 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-[36px]"
                 />
-              ))}
-              {notes.length === 0 && (
-                <div className="text-center py-8 text-gray-500 text-sm">
-                  {activeTag ? "No notes found with this tag" : "Start adding your first note!"}
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('')
+                      filterNotes(notes, '')
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {activeTag && (
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={() => setActiveTag('')}
+                    className="text-xs border border-gray-300 px-3 py-2 rounded-lg h-[36px]"
+                  >
+                    Clear filter: #{activeTag}
+                  </button>
                 </div>
               )}
             </div>
+          )}
 
-            {notes.length > 0 && (
-              <div className="flex items-center justify-center mt-6 text-xs text-gray-400">
-                <div className="border-t border-gray-200 w-16 mr-3"></div>
-                <button
-                  onClick={exportNotes}
-                  className="flex items-center hover:text-black"
-                  title="Download notes as JSON"
-                >
-                  {notes.length} notes - click to export all notes.
-                </button>
-                <div className="border-t border-gray-200 w-16 ml-3"></div>
+          <div className="mt-8">
+          <div className="space-y-4">
+            {filteredNotes.map((note) => (
+              <NoteItem
+                key={note.id}
+                note={note}
+                onTagClick={handleTagClick}
+                activeTag={activeTag}
+                onNoteUpdated={loadNotes}
+              />
+            ))}
+            {filteredNotes.length === 0 && (
+              <div className="text-center py-8 text-gray-500 text-sm">
+                {activeTag ? "No notes found with this tag" : searchQuery ? "No notes found with this search" : "Start adding your first note!"}
               </div>
             )}
           </div>
+          </div>
+
+          {notes.length > 0 && (
+            <div className="flex items-center justify-center mt-6 text-xs text-gray-400">
+              <div className="border-t border-gray-200 w-16 mr-3"></div>
+              <button
+                onClick={exportNotes}
+                className="flex items-center hover:text-black"
+                title="Download notes as JSON"
+              >
+                {notes.length} notes - click to export all notes.
+              </button>
+              <div className="border-t border-gray-200 w-16 ml-3"></div>
+            </div>
+          )}
         </div>
 
         <footer className="pt-4 text-xs text-gray-400 text-center">
           <p>MemoCat — Your elegant note-taking companion</p>
           <p className="mt-1">All notes are stored locally in your browser/disk</p>
           <div className="mt-3">
-            © {new Date().getFullYear()} <a href="https://x.com/we_webmaster" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">x.com/we_webmaster</a> · <a href="https://github.com/airyland/memocat" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">GitHub</a>
+            {new Date().getFullYear()} <a href="https://x.com/we_webmaster" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">x.com/we_webmaster</a> · <a href="https://github.com/airyland/memocat" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">GitHub</a>
           </div>
-          <div className="mt-1">Made with ❤️ and AI</div>
+          <div className="mt-1">Made with and AI</div>
         </footer>
       </div>
     </main>
