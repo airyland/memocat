@@ -229,6 +229,8 @@ export default function Home() {
             }
           }]
         })
+
+        console.log('got handle', handle)
         
         fileSync.fileHandle = handle
         setHasFileHandle(true)
@@ -284,6 +286,7 @@ export default function Home() {
   const handleDeleteNote = async (id: number) => {
     await db.notes.delete(id)
     loadNotes()
+    syncToDisk()
   }
 
   const handleUpdateNote = async (id: number, updates: Partial<Note>) => {
@@ -319,7 +322,7 @@ export default function Home() {
   return (
     <main className="min-h-screen py-12 px-4 md:px-8">
       <div className="max-w-5xl mx-auto">
-        <div className="window-chrome pt-12 pb-6 px-6 mb-8">
+        <div className="window-chrome pt-12 pb-6 px-6 mb-4">
           <div className="window-dots">
             <div className="window-dot window-dot-red cursor-pointer"></div>
             <div className="window-dot window-dot-yellow"></div>
@@ -423,13 +426,17 @@ export default function Home() {
                 <div className="border-t border-gray-200 w-16 ml-3"></div>
               </div>
             )}
-
-            <footer className="mt-8 pt-4 text-xs text-gray-400 text-center">
-              <p>MemoCat — Your elegant note-taking companion</p>
-              <p className="mt-1">All notes are stored locally in your browser/disk</p>
-            </footer>
           </div>
         </div>
+
+        <footer className="pt-4 text-xs text-gray-400 text-center">
+          <p>MemoCat — Your elegant note-taking companion</p>
+          <p className="mt-1">All notes are stored locally in your browser/disk</p>
+          <div className="mt-3">
+            © {new Date().getFullYear()} <a href="https://x.com/we_webmaster" className="hover:text-gray-600" target="_blank" rel="noopener noreferrer">x.com/we_webmaster</a>
+          </div>
+          <div className="mt-1">Made with ❤️ and AI</div>
+        </footer>
       </div>
     </main>
   )
